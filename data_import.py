@@ -82,7 +82,8 @@ def get_training_data(sentences_labels,sentences_casing,word_to_ix):
             
 training_data = get_training_data(sentences_labels,sentences_casing,word_to_ix)      
 
-
+    
+    
 
 
 
