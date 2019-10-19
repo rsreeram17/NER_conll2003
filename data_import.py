@@ -1,11 +1,13 @@
 import os
 import re
+import pandas as pd
 
 dir_path = os.path.dirname(os.path.realpath(__file__))
 
 caselookup = {'numeric':0,'alllower':1,'allupper':2,'initupper':3,'others':4}
+labels_lookup = {'B-ORG':0,'O':1,'B-MISC':2,'B-PER':3,'I-PER':4,'B-LOC':5,'I-ORG':6,'I-MISC':7,'I-LOC':8}
 
-def get_data(filename,dir_path,caselookup):
+def get_data(filename,dir_path,caselookup,labels_lookup):
  
     f = open(dir_path+"\\Data\\"+filename)
     sentences_labels = []
@@ -24,7 +26,8 @@ def get_data(filename,dir_path,caselookup):
         regexPattern = '|'.join(map(re.escape, delimiters))
         splits = re.split(regexPattern, line)
         #splits = pattern.split(line)
-        sentence.append([splits[0],splits[-2]])
+        label_id = labels_lookup[splits[-2]]
+        sentence.append([splits[0],label_id])
         casing = casingmap(splits[0],caselookup)
         casing_info.append([splits[0],casing])     
 
@@ -51,4 +54,4 @@ def casingmap(word,caselookup):
 
     return caselookup[casing]
 
-sentences_labels,sentences_casing = get_data("train.txt",dir_path,caselookup)
+#sentences_labels,sentences_casing = get_data("train.txt",dir_path,caselookup,labels_lookup)
