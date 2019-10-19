@@ -14,6 +14,7 @@ def get_data(filename,dir_path,caselookup,labels_lookup):
     sentence = []  
     casing_info = []
     sentences_casing = []
+    vocab = {}
     for line in f:
         if len(line)==0 or line.startswith('-DOCSTART') or line[0]=="\n":
             if len(sentence) > 0:
@@ -54,4 +55,43 @@ def casingmap(word,caselookup):
 
     return caselookup[casing]
 
-#sentences_labels,sentences_casing = get_data("train.txt",dir_path,caselookup,labels_lookup)
+def get_word_to_ix(sentences_labels):
+    word_to_ix = {}
+    for sentence in sentences_labels:
+        for token in sentence:
+            if token[0] not in word_to_ix:
+                word_to_ix[token[0]] = len(word_to_ix)
+    return word_to_ix
+
+def get_training_data(sentences_labels,sentences_casing,word_to_ix):
+  
+    training_data = []
+    for i,sentence in enumerate(sentences_labels):
+        idxs = []
+        casing_idxs = []
+        labels_idxs = []
+        for j,token in enumerate(sentence):     
+            idxs.append(word_to_ix[token[0]])
+            casing_idxs.append(sentences_casing[i][j][1])
+            labels_idxs.append(token[1])
+            
+        sample_tuple = (idxs,casing_idxs,labels_idxs)
+        training_data.append(sample_tuple)
+    
+    return training_data
+            
+training_data = get_training_data(sentences_labels,sentences_casing,word_to_ix)      
+
+
+
+
+
+
+
+
+
+
+
+
+
+
