@@ -38,3 +38,20 @@ class Datasetclass (data.Dataset):
         return sentence_embedding
 
 #dataset = Datasetclass(training_data,word_to_ix,caselookup) 
+        
+def collate_fn (data):
+    
+    sorted_batch = sorted(data, key=lambda x: x[0].shape[0], reverse=True)
+    sequences = [x[0] for x in sorted_batch]
+    labels = [x[1] for x in sorted_batch]
+    sequences_padded = torch.nn.utils.rnn.pad_sequence(sequences, batch_first=True)
+    labels_padded = torch.nn.utils.rnn.pad_sequence(labels,batch_first = True,padding_value = 9)
+    
+    lengths = torch.LongTensor([len(x) for x in sequences])
+    #labels = torch.LongTensor([x for x in labels])
+    return sequences_padded, lengths, labels_padded
+
+train_data_loader = torch.utils.data.DataLoader(dataset = dataset,batch_size=10,collate_fn=collate_fn)
+
+
+   
