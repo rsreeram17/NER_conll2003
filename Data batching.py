@@ -37,4 +37,4 @@ class Datasetclass (data.Dataset):
         
         return sentence_embedding
 
-dataset = Datasetclass(training_data,word_to_ix,caselookup) 
+#dataset = Datasetclass(training_data,word_to_ix,caselookup) 
