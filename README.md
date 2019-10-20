@@ -4,8 +4,6 @@ This repository is a try to build a LSTM based entity recognition model for conl
 
 [NER with bi-LSTM-CNNs]: https://arxiv.org/pdf/1511.08308.pdf
 
-
-
 ## Approach
 
 - As a first step, a basic LSTM model (with one hidden layer) is used
@@ -78,6 +76,16 @@ Default used for the initial iterations
 
 As the batch size went really small the model started taking longer time to converge and also the model running time increased a lot. As batch size increased the model started converging faster and for really large batches the model did not converge. This is primarily because as batch sizes become extremely small there will be more weight updates and this will make the update erratic and convergence tougher. As the batch size is very large, the weight updates are really less and this makes it difficult for the model to converge. A batch size of 256 & 512 gave the best performance out of the tried combinations.
 
+### Precision, Recall and F score
+
+Average precision: 0.21
+
+Average recall: 0.30
+
+Fscore = 0.25
+
+These scores are the scores from the first iteration of testing and without any debugging. Because of limited time, I am reporting the scores directly without debugging and finetuning
+
 ### Other modelling options to explore
 
 The model used here is a basic LSTM model. Other than this some of the other models that can be used are:
@@ -95,5 +103,7 @@ The model used here is a basic LSTM model. Other than this some of the other mod
 
 **Model not learning in the first iteration:** After the entire data preparation and model building pipeline was completed, when running the model, the model was not learning at each epoch. This was then solved by debugging the data preparation pipeline in the first place. And later the model building pipleline was debugged. The issue of not calculating loss correctly was then resolved.
 
+### Effect of imbalanced dataset
 
+One thing that I observed is that, there is a very big skew towards the tokens with entity 'O'. Since there are a lot of tokens with label 'O' the model is not able to learn the pattrern for the remaining classes. This can be visible in the individual entity precision scores where label 'O' has very high precision because of this class imbalance.
 
