@@ -76,7 +76,7 @@ Default used for the initial iterations
 
 ### Effect of batch size in model performance:
 
-As the batch size went really small the model started taking longer time to converge and also the model running time increased a lot. As batch size increased the model started converging faster and for really large batches the model did not converge. This is primarily because as batch sizes become extremely small there will be more weight updates and this will make the update erratic and convergence tougher. As the batch size is very large, the weight updates are really less and this makes it difficult for the model to converge. A batch size of 256&512 gave the best performance out of the tried combinations.
+As the batch size went really small the model started taking longer time to converge and also the model running time increased a lot. As batch size increased the model started converging faster and for really large batches the model did not converge. This is primarily because as batch sizes become extremely small there will be more weight updates and this will make the update erratic and convergence tougher. As the batch size is very large, the weight updates are really less and this makes it difficult for the model to converge. A batch size of 256 & 512 gave the best performance out of the tried combinations.
 
 ### Other modelling options to explore
 
@@ -88,4 +88,12 @@ The model used here is a basic LSTM model. Other than this some of the other mod
 - **Character level feature:** A character level feature can be added as an additional input along with the token and case embeddings to add more information to the model. (Idea from the above referenced paper)
 
 ### Problems faced during implementation
+
+**Variable sized inputs:** Since the sentences were of different lengths, while batching the shorter sentences had to be padded. This was done using the pad_sequence function and later when the batch was fed into the model the padded sentences had to be packed. This was done using the pack_padded_sequence function. And later the outputs had to be padded back. This is mainly done to not consider the padded input for back propogation. 
+
+**Model getting stuck at local minima:** SGD with momentum was the choice made for the first few iterations and the optimizer seemed to be not training the model without getting stuck on a local minima. Later, Adam was used to rectify this problem. 
+
+**Model not learning in the first iteration:** After the entire data preparation and model building pipeline was completed, when running the model, the model was not learning at each epoch. This was then solved by debugging the data preparation pipeline in the first place. And later the model building pipleline was debugged. The issue of not calculating loss correctly was then resolved.
+
+
 
