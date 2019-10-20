@@ -62,7 +62,7 @@ def train_model(model,optimizer,scheduler,num_epochs):
                         loss.backward()
                         optimizer.step()
                 
-                running_loss += loss.item()
+                running_loss += loss
                 running_corrects += torch.sum(preds == labels)
                 
             epoch_loss = running_loss / data_lengths[phase]
