@@ -54,15 +54,38 @@ The model is a basic LSTM model with a single hidden layer of dimension 128. The
 
 Most of the hyperparameters used are based on standard/general ways of starting the modelling exercise. 
 
-Embedding dimension for token embedding: 100
+**Embedding dimension for token embedding: 100**
 
 Started with 32, then 64 and then 100. This was a gradual increase based on the better performance of the model. 
 
-Batch size: 10,64,128,512,1024
+**Batch size: 10,64,128,512,1024**
 
 1024 was used as the final batch size to faster the model running. There was a slight trade off on the the model performance here.
 
+**Number of epochs: 10**
 
+Selected based on model running time
 
+**Optimizer and parameters: Adam optimizer with default parameters** 
 
+SGD with momentum (lr = 0.001, mom = 0.9) was used in the first iteration, but Adam with default parameters gave better performance.
+
+**Learning rate scheduler: period of lr decay - 7 steps and gamma 0.1 (Default)**
+
+Default used for the initial iterations
+
+### Effect of batch size in model performance:
+
+As the batch size went really small the model started taking longer time to converge and also the model running time increased a lot. As batch size increased the model started converging faster and for really large batches the model did not converge. This is primarily because as batch sizes become extremely small there will be more weight updates and this will make the update erratic and convergence tougher. As the batch size is very large, the weight updates are really less and this makes it difficult for the model to converge. A batch size of 256&512 gave the best performance out of the tried combinations.
+
+### Other modelling options to explore
+
+The model used here is a basic LSTM model. Other than this some of the other models that can be used are:
+
+- **bidirectional LSTM:** This would work better because of the additional input of information from the other side of the sentence and there would be more context for the model to learn from
+- **bi-directional GRU:** This should work as good as an LSTM model and contains less complexity
+- **pre-trained embeddings:** Use of pre trained embeddings to embed the tokens will definitely improve the model because of the captured context in the embeddings
+- **Character level feature:** A character level feature can be added as an additional input along with the token and case embeddings to add more information to the model. (Idea from the above referenced paper)
+
+### Problems faced during implementation
 
