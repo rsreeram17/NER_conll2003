@@ -2,6 +2,15 @@ from torch.optim import lr_scheduler
 import torch.optim as optim
 import time
 import copy
+import torch
+import torch.utils.data as data
+import torch.nn as nn
+from torch.autograd import Variable
+import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence as PACK
+from torch.nn.utils.rnn import pad_packed_sequence
+
+from statistics import mean
 
 class LSTMTagger(nn.Module):
     def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
@@ -19,11 +28,8 @@ class LSTMTagger(nn.Module):
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
 
-model = LSTMTagger(105,128,len(word_to_ix),10)
 
-#criterion = nn.NLLLoss(ignore_index = 9)
-
-def train_model(model,optimizer,scheduler,num_epochs):
+def train_model(model,optimizer,scheduler,num_epochs,dir_path,data_loaders):
     
     since = time.time()
     best_model_wts = copy.deepcopy(model.state_dict())
@@ -70,7 +76,15 @@ def train_model(model,optimizer,scheduler,num_epochs):
                 
             epoch_loss = running_loss
             epoch_acc = running_corrects.double() / total_number_of_preds
-
+            
+            model_name = 'model_ner.tar'
+            path = dir_path+"\\"+model_name
+            
+            torch.save({
+                      'model_state_dict': model.state_dict(),
+                      'optimizer_state_dict': optimizer.state_dict(),
+                      }, path)
+           
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
             
             if phase == 'val' and epoch_acc > best_acc:
@@ -84,9 +98,3 @@ def train_model(model,optimizer,scheduler,num_epochs):
     print('Best val Acc: {:4f}'.format(best_acc))
     model.load_state_dict(best_model_wts)
     return model
-
-optimizer_ft = torch.optim.Adam(model.parameters(), lr=0.001,  betas=(0.9, 0.99), weight_decay=0.0002)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
-num_epochs = 10
-
-model = train_model(model,optimizer_ft,exp_lr_scheduler,num_epochs)
