@@ -43,6 +43,7 @@ def train_model(model,optimizer,scheduler,num_epochs):
             
             running_loss = 0.0
             running_corrects = 0
+            total_number_of_preds = 0.0
             
             ##Iterate over data
             
@@ -53,6 +54,7 @@ def train_model(model,optimizer,scheduler,num_epochs):
                 with torch.set_grad_enabled(phase=='train'):
                     outputs = model(sentences,lengths)
                     _,preds = torch.max(outputs,2)
+                    number_of_preds = preds.shape[0]*preds.shape[1]
                     loss = 0
                     for i in range (outputs.size(0)):
                         nllloss = F.nll_loss(outputs[i],labels[i],ignore_index=9)
@@ -64,10 +66,11 @@ def train_model(model,optimizer,scheduler,num_epochs):
                 
                 running_loss += loss
                 running_corrects += torch.sum(preds == labels)
+                total_number_of_preds += number_of_preds
                 
-            epoch_loss = running_loss / data_lengths[phase]
-            epoch_acc = running_corrects.double() / data_lengths[phase]
-            
+            epoch_loss = running_loss
+            epoch_acc = running_corrects.double() / total_number_of_preds
+
             print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
             
             if phase == 'val' and epoch_acc > best_acc:
