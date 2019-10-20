@@ -39,7 +39,7 @@ class Datasetclass (data.Dataset):
         
         return sentence_embedding
 
-#dataset = Datasetclass(training_data,word_to_ix,caselookup) 
+
         
 def collate_fn (data):
     
@@ -53,32 +53,19 @@ def collate_fn (data):
     #labels = torch.LongTensor([x for x in labels])
     return sequences_padded, lengths, labels_padded
 
-train_data_loader = torch.utils.data.DataLoader(dataset = dataset,batch_size=10,collate_fn=collate_fn)
+dataset_training = Datasetclass(training_data,word_to_ix,caselookup)
+dataset_val = Datasetclass(validation_data,word_to_ix,caselookup)
+train_data_loader = torch.utils.data.DataLoader(dataset = dataset_training,batch_size=1200,collate_fn=collate_fn)
+val_data_loader = torch.utils.data.DataLoader(dataset = dataset_val,batch_size=1200,collate_fn=collate_fn)
 
-class LSTMTagger(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
-        super(LSTMTagger, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim,batch_first = True)
-        self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
-        
-    def forward(self,sentences,lengths):
-        
-        x_packed = PACK(sentences,lengths, batch_first=True)
-        output_packed, _ = self.lstm(x_packed)
-        output_padded, output_lengths = pad_packed_sequence(output_packed, batch_first=True)
-        tag_space = self.hidden2tag(output_padded)
-        tag_scores = F.log_softmax(tag_space, dim=1)
-        return tag_scores
+data_loaders = {}
+data_loaders['train'] = train_data_loader
+data_loaders['val'] = val_data_loader
 
-model = LSTMTagger(105,512,23623,10)
-sentences,lengths,labels = next(iter(train_data_loader))
-op = model(sentences,lengths)
-
-batch_loss = 0
-for i in range (op.size(0)):
-    nllloss = F.nll_loss(op[i],labels[i],ignore_index=9)
-    batch_loss += nllloss
+data_lengths = {}
+data_lengths['train'] = len(dataset_training)
+data_lengths['val'] = len(dataset_val)
+    
         
 
    
