@@ -2,11 +2,6 @@ import os
 import re
 import pandas as pd
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
-
-caselookup = {'numeric':0,'alllower':1,'allupper':2,'initupper':3,'others':4}
-labels_lookup = {'B-ORG':0,'O':1,'B-MISC':2,'B-PER':3,'I-PER':4,'B-LOC':5,'I-ORG':6,'I-MISC':7,'I-LOC':8}
-
 def get_data(filename,dir_path,caselookup,labels_lookup):
  
     f = open(dir_path+"\\Data\\"+filename)
@@ -55,9 +50,17 @@ def casingmap(word,caselookup):
 
     return caselookup[casing]
 
-def get_word_to_ix(sentences_labels):
+def get_word_to_ix(sentences_labels,sentence_labels_val,sentence_labels_test):
     word_to_ix = {}
     for sentence in sentences_labels:
+        for token in sentence:
+            if token[0] not in word_to_ix:
+                word_to_ix[token[0]] = len(word_to_ix)
+    for sentence in sentence_labels_val:
+        for token in sentence:
+            if token[0] not in word_to_ix:
+                word_to_ix[token[0]] = len(word_to_ix)
+    for sentence in sentence_labels_test:
         for token in sentence:
             if token[0] not in word_to_ix:
                 word_to_ix[token[0]] = len(word_to_ix)
@@ -80,7 +83,6 @@ def get_training_data(sentences_labels,sentences_casing,word_to_ix):
     
     return training_data
             
-training_data = get_training_data(sentences_labels,sentences_casing,word_to_ix)      
 
     
     
