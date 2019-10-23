@@ -17,11 +17,15 @@ training_data = get_training_data(sentences_labels,sentences_casing,word_to_ix)
 validation_data = get_training_data(sentences_labels_val,sentence_casing_val,word_to_ix)
 testing_data = get_training_data(sentences_labels_test,sentence_casing_test,word_to_ix)
 
+glove_model = loadGloveModel('glove.6B.50d.txt')
+weight_matrix = create_weightmatrix(glove_model,len(word_to_ix)+1,50,word_to_ix)
+
+
 ##Dataset preparation
 dataset_training = Datasetclass(training_data,word_to_ix,caselookup)
 dataset_val = Datasetclass(validation_data,word_to_ix,caselookup)
-train_data_loader = torch.utils.data.DataLoader(dataset = dataset_training,batch_size=256,collate_fn=collate_fn)
-val_data_loader = torch.utils.data.DataLoader(dataset = dataset_val,batch_size=256,collate_fn=collate_fn)
+train_data_loader = torch.utils.data.DataLoader(dataset = dataset_training,batch_size=128,collate_fn=collate_fn)
+val_data_loader = torch.utils.data.DataLoader(dataset = dataset_val,batch_size=128,collate_fn=collate_fn)
 data_loaders = {}
 data_loaders['train'] = train_data_loader
 data_loaders['val'] = val_data_loader
@@ -30,12 +34,13 @@ data_lengths['train'] = len(dataset_training)
 data_lengths['val'] = len(dataset_val)
 
 ##Model building
-model = LSTMTagger(105,128,len(word_to_ix),10)
-optimizer_ft = torch.optim.Adam(model.parameters(), lr=0.001,  betas=(0.9, 0.99), weight_decay=0.0002)
-exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
-num_epochs = 10
+model = LSTMTagger(weight_matrix,512,512,len(caselookup),10)
+#optimizer_ft = torch.optim.Adam(model.parameters(), lr=0.001,  betas=(0.9, 0.99), weight_decay=0.0002)
+optimizer_ft = optim.SGD(model.parameters(), lr=0.01, momentum=0.9)
+exp_lr_scheduler = lr_scheduler.CyclicLR(optimizer_ft, base_lr = 0.000001 ,max_lr = 0.01)
+#exp_lr_scheduler = lr_scheduler.StepLR(optimizer_ft, step_size=7, gamma=0.1)
+num_epochs = 30
 model = train_model(model,optimizer_ft,exp_lr_scheduler,num_epochs,dir_path,data_loaders)
-
 
 
 
