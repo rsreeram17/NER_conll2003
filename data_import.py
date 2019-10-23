@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+import numpy as np
 
 def get_data(filename,dir_path,caselookup,labels_lookup):
  
@@ -23,7 +24,7 @@ def get_data(filename,dir_path,caselookup,labels_lookup):
         splits = re.split(regexPattern, line)
         #splits = pattern.split(line)
         label_id = labels_lookup[splits[-2]]
-        sentence.append([splits[0],label_id])
+        sentence.append([splits[0].lower(),label_id])
         casing = casingmap(splits[0],caselookup)
         casing_info.append([splits[0],casing])     
 
@@ -83,9 +84,33 @@ def get_training_data(sentences_labels,sentences_casing,word_to_ix):
     
     return training_data
             
+    
+def loadGloveModel(gloveFile):
+    f = open(gloveFile,encoding="utf8")
+    model = {}
+    for line in f:
+        splitLine = line.split()
+        word = splitLine[0]
+        embedding = np.array([float(val) for val in splitLine[1:]])
+        model[word] = embedding
+    return model
+ 
+def create_weightmatrix(model,matrix_len,embedding_size,target_vocab):
+   
+    weights_matrix = np.zeros((matrix_len,50))
+    words_found = 0
+    
+    for key,value in target_vocab.items():
+        try: 
+            weights_matrix[value] = model[key]
+            words_found += 1
+        except KeyError:
+            weights_matrix[value] = np.random.normal(scale=0.6, size=(embedding_size, ))
+
+    return weights_matrix
 
     
-    
+        
 
 
 
