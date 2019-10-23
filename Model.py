@@ -12,22 +12,41 @@ from torch.nn.utils.rnn import pad_packed_sequence
 
 from statistics import mean
 
+def create_emb_layer(weights_matrix, non_trainable=False):
+    num_embeddings, embedding_dim = weights_matrix.shape
+    emb_layer = nn.Embedding(num_embeddings, embedding_dim)
+    emb_layer.weight.data.copy_(torch.from_numpy(weights_matrix))
+    if non_trainable:
+        emb_layer.weight.requires_grad = False
+    return emb_layer, num_embeddings, embedding_dim
+
 class LSTMTagger(nn.Module):
-    def __init__(self, embedding_dim, hidden_dim, vocab_size, tagset_size):
+    def __init__(self, weights_matrix, hidden_dim_1,hidden_dim_2, case_size, tagset_size):
         super(LSTMTagger, self).__init__()
-        self.hidden_dim = hidden_dim
-        self.lstm = nn.LSTM(embedding_dim, hidden_dim,batch_first = True)
-        self.hidden2tag = nn.Linear(hidden_dim, tagset_size)
         
-    def forward(self,sentences,lengths):
+        self.embedding_token, num_embeddings, embedding_dim = create_emb_layer(weights_matrix, True)
+        #self.embedding_token = nn.Embedding(vocab_size,100)
+        self.embedding_case = nn.Embedding(case_size,case_size)
+        self.embedding_case.weight.data = torch.eye(case_size)
+        #self.hidden_dim = hidden_dim
+        self.lstm_1 = nn.LSTM((embedding_dim + case_size), hidden_dim_1,batch_first = True)
+        self.lstm_2 = nn.LSTM(hidden_dim_1,hidden_dim_2,batch_first = True)
+        self.hidden2tag = nn.Linear(hidden_dim_2, tagset_size)
         
-        x_packed = PACK(sentences,lengths, batch_first=True)
-        output_packed, _ = self.lstm(x_packed)
-        output_padded, output_lengths = pad_packed_sequence(output_packed, batch_first=True)
+    def forward(self,sequences_tokens,sequences_casing,lengths):
+        
+        sequences_token_embedding = self.embedding_token(sequences_tokens)
+        sequences_casing_embedding = self.embedding_case(sequences_casing)
+        
+        sequences_embedding_packed = torch.cat((sequences_token_embedding,sequences_casing_embedding),2)  
+        
+        x_packed = PACK(sequences_embedding_packed,lengths, batch_first=True)
+        output_1, _ = self.lstm_1(x_packed)
+        output_2,_ = self.lstm_2(output_1)
+        output_padded, output_lengths = pad_packed_sequence(output_2, batch_first=True)
         tag_space = self.hidden2tag(output_padded)
         tag_scores = F.log_softmax(tag_space, dim=1)
         return tag_scores
-
 
 def train_model(model,optimizer,scheduler,num_epochs,dir_path,data_loaders):
     
@@ -53,12 +72,12 @@ def train_model(model,optimizer,scheduler,num_epochs,dir_path,data_loaders):
             
             ##Iterate over data
             
-            for sentences,lengths,labels in data_loaders[phase]:
+            for sequences_tokens,sequences_casing,lengths,labels in data_loaders[phase]:
                 
                 optimizer.zero_grad()
                 
                 with torch.set_grad_enabled(phase=='train'):
-                    outputs = model(sentences,lengths)
+                    outputs = model(sequences_tokens,sequences_casing,lengths)
                     _,preds = torch.max(outputs,2)
                     number_of_preds = preds.shape[0]*preds.shape[1]
                     loss = 0
