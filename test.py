@@ -17,12 +17,13 @@ def testing(testing_data,model,word_to_ix,caselookup):
     
     for i in range(len(dataset_test)):
         
-        input_data,labels = dataset_test[i]
-        input_data = input_data[None,:,:]
-        length = [input_data.shape[1]]
+        input_token,input_casing,labels,word2ix_len = dataset_test[i]
+        input_token = input_token[None,:]
+        input_casing = input_casing[None,:]
+        length = [input_token.shape[1]]
         
         model.eval()
-        outputs = model(input_data,length)
+        outputs = model(input_token,input_casing,length)
         _,preds = torch.max(outputs,2)
         
         preds_list = preds[0,:].tolist()
@@ -34,7 +35,31 @@ def testing(testing_data,model,word_to_ix,caselookup):
     precision_list = []
     recall_list = []
     
-    for i in range(9):
+    for i,element in enumerate(pred_combined):
+        if (element == 0 or element == 6):
+            pred_combined[i] = 0
+        elif (element == 2 or element == 7):
+            pred_combined[i] = 1
+        elif (element == 3 or element == 4):
+            pred_combined[i] = 2
+        elif (element == 5 or element == 8):
+            pred_combined[i] = 3
+        elif (element == 1):
+            pred_combined[i] = 4
+    
+    for i,element in enumerate(labels_combined):
+        if (element == 0 or element == 6):
+            labels_combined[i] = 0
+        elif (element == 2 or element == 7):
+            labels_combined[i] = 1
+        elif (element == 3 or element == 4):
+            labels_combined[i] = 2
+        elif (element == 5 or element == 8):
+            labels_combined[i] = 3
+        elif (element == 1):
+            labels_combined[i] = 4   
+    
+    for i in range(5):
         
         indices = [index for index,value in enumerate(pred_combined) if value == i]
         actual_labels = [labels_combined[j] for j in indices]
@@ -53,7 +78,7 @@ def testing(testing_data,model,word_to_ix,caselookup):
     
     fscore = (2*average_precision*average_recall)/(average_precision + average_recall)
     
-    return average_precision,average_recall,fscore,precision_list,recall_list
+    return average_precision,average_recall,fscore,precision_list,recall_list,labels_combined,pred_combined
 
 
 
