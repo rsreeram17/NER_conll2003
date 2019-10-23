@@ -12,17 +12,18 @@ class Datasetclass (data.Dataset):
         self.data_list = data_list
         self.no_of_samples = len(self.data_list)
         self.caselookup = caselookup
-        self.embedding_token = nn.Embedding(len(word_to_ix),100)
-        self.embedding_case = nn.Embedding(len(self.caselookup),len(self.caselookup))
-        self.embedding_case.weight.data = torch.eye(len(self.caselookup))
+        self.word_to_ix = word_to_ix
+        #self.embedding_token = nn.Embedding(len(word_to_ix),100)
+        #self.embedding_case = nn.Embedding(len(self.caselookup),len(self.caselookup))
+        #self.embedding_case.weight.data = torch.eye(len(self.caselookup))
         
     def __getitem__(self,index):
         
         data = self.data_list[index]
         label_list = torch.tensor(data[2])
-        sentence_embedding = self.vectorize(data)
+        token_indices_list,token_casing_list = self.vectorize(data)
         
-        return sentence_embedding,label_list
+        return token_indices_list,token_casing_list,label_list, len(self.word_to_ix)
          
     def __len__(self):
         
@@ -30,26 +31,32 @@ class Datasetclass (data.Dataset):
     
     def vectorize (self,data):
         
-        token_indices_list = data[0]
-        token_casing_list = data[1]
+        #data_indices = []
+        token_indices_list = torch.LongTensor(data[0])
+        token_casing_list = torch.LongTensor(data[1])
         
-        token_embedding = self.embedding_token(torch.tensor(token_indices_list))
-        case_embedding = self.embedding_case(torch.tensor(token_casing_list))
-        sentence_embedding = torch.cat((token_embedding,case_embedding),1)
-        
-        return sentence_embedding
+        #data_indices.append(token_indices_list)
+        #data_indices.append(token_casing_list)
+        #token_embedding = self.embedding_token(torch.tensor(token_indices_list))
+        #case_embedding = self.embedding_case(torch.tensor(token_casing_list))
+        #sentence_embedding = torch.cat((token_embedding,case_embedding),1)
+
+        return token_indices_list,token_casing_list
         
 def collate_fn (data):
     
     sorted_batch = sorted(data, key=lambda x: x[0].shape[0], reverse=True)
-    sequences = [x[0] for x in sorted_batch]
-    labels = [x[1] for x in sorted_batch]
-    sequences_padded = torch.nn.utils.rnn.pad_sequence(sequences, batch_first=True)
+    sequences_token = [x[0] for x in sorted_batch]
+    sequences_casing = [x[1] for x in sorted_batch]
+    labels = [x[2] for x in sorted_batch]
+    len_word_to_ix_list = [x[3] for x in sorted_batch]
+    len_w2ix = len_word_to_ix_list[0]
+    sequences_tokens_padded = torch.nn.utils.rnn.pad_sequence(sequences_token, batch_first=True,padding_value = len_w2ix )
+    sequences_casing_padded = torch.nn.utils.rnn.pad_sequence(sequences_casing, batch_first=True,padding_value = 4)
     labels_padded = torch.nn.utils.rnn.pad_sequence(labels,batch_first = True,padding_value = 9)
-    
-    lengths = torch.LongTensor([len(x) for x in sequences])
+    lengths = torch.LongTensor([len(x) for x in sequences_token])
     #labels = torch.LongTensor([x for x in labels])
-    return sequences_padded, lengths, labels_padded
+    return sequences_tokens_padded, sequences_casing_padded, lengths, labels_padded
 
 
     
